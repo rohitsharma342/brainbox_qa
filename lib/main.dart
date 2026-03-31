@@ -5,14 +5,16 @@ import 'config/routes.dart';
 import 'providers/auth_provider.dart';
 import 'providers/project_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/payment_provider.dart';
+import 'services/data_service.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const BrainBoxQAApp());
+  runApp(const MyApp());
 }
 
-class BrainBoxQAApp extends StatelessWidget {
-  const BrainBoxQAApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +23,17 @@ class BrainBoxQAApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ProjectProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) {
+          final paymentProvider = PaymentProvider();
+          paymentProvider.initializeMockPayments(DataService.getMockProjects());
+          return paymentProvider;
+        }),
       ],
       child: MaterialApp(
-        title: 'BrainBox QA',
+        title: 'Project Tracker',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        initialRoute: AppRoutes.splash,
+        home: const SplashScreen(),
         onGenerateRoute: AppRoutes.generateRoute,
       ),
     );

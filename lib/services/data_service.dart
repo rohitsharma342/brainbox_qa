@@ -2,6 +2,7 @@ import '../models/project.dart';
 import '../models/feedback.dart';
 import '../models/notification.dart';
 import '../models/user.dart';
+import '../models/payment.dart';
 
 class DataService {
   static User getMockUser() {
@@ -409,5 +410,68 @@ class DataService {
     }
     allApks.sort((a, b) => b.releaseDate.compareTo(a.releaseDate));
     return allApks.take(5).toList();
+  }
+
+  static List<Payment> getMockPaymentsForProject(String projectId) {
+    final projects = getMockProjects();
+    final project = projects.firstWhere(
+      (p) => p.id == projectId,
+      orElse: () => projects.first,
+    );
+
+    List<Payment> payments = [];
+    for (var milestone in project.milestones) {
+      PaymentStatus status;
+      DateTime? paidDate;
+      String? transactionId;
+      String? paymentMethod;
+
+      if (milestone.isCompleted) {
+        status = PaymentStatus.paid;
+        paidDate = milestone.completedDate?.add(const Duration(days: 5));
+        transactionId = 'TXN${milestone.id.hashCode.abs()}';
+        paymentMethod = 'Bank Transfer';
+      } else {
+        status = PaymentStatus.pending;
+      }
+
+      double amount;
+      switch (milestone.order) {
+        case 1:
+          amount = 5000.0;
+          break;
+        case 2:
+          amount = 8000.0;
+          break;
+        case 3:
+          amount = 12000.0;
+          break;
+        case 4:
+          amount = 10000.0;
+          break;
+        case 5:
+          amount = 8000.0;
+          break;
+        case 6:
+          amount = 7000.0;
+          break;
+        default:
+          amount = 5000.0;
+      }
+
+      payments.add(Payment(
+        id: 'pay_${milestone.id}',
+        milestoneId: milestone.id,
+        projectId: projectId,
+        amount: amount,
+        status: status,
+        paidDate: paidDate,
+        dueDate: milestone.completedDate?.add(const Duration(days: 15)) ??
+            DateTime.now().add(const Duration(days: 30)),
+        transactionId: transactionId,
+        paymentMethod: paymentMethod,
+      ));
+    }
+    return payments;
   }
 }

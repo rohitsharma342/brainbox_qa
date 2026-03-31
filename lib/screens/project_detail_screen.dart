@@ -5,10 +5,13 @@ import 'package:intl/intl.dart';
 import '../config/theme.dart';
 import '../models/project.dart';
 import '../providers/project_provider.dart';
+import '../providers/payment_provider.dart';
 import '../widgets/feedback_item.dart';
 import '../widgets/feedback_modal.dart';
 import '../widgets/update_request_modal.dart';
 import '../widgets/apk_item.dart';
+import '../widgets/milestone_item.dart';
+import '../widgets/payment_summary_card.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final Project project;
@@ -27,7 +30,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _project = widget.project;
   }
 
@@ -103,6 +106,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
               controller: _tabController,
               children: [
                 _buildMilestonesTab(),
+                _buildPaymentsTab(),
                 _buildFeedbackTab(),
                 _buildAPKsTab(),
               ],
@@ -344,8 +348,11 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
         unselectedLabelColor: AppTheme.textTertiary,
         indicatorColor: AppTheme.primaryColor,
         indicatorWeight: 3,
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
         tabs: const [
           Tab(text: 'Milestones'),
+          Tab(text: 'Payments'),
           Tab(text: 'Feedback'),
           Tab(text: 'APK Files'),
         ],
@@ -455,6 +462,92 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                         ),
                       ],
                   ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPaymentsTab() {
+    return Consumer<PaymentProvider>(
+      builder: (context, paymentProvider, child) {
+        final milestonePayments = paymentProvider.getMilestonePayments(_project);
+        final totalAmount = paymentProvider.getTotalAmount(_project);
+        final paidAmount = paymentProvider.getPaidAmount(_project);
+        final pendingAmount = paymentProvider.getPendingAmount(_project);
+        final paidCount = paymentProvider.getPaidCount(_project);
+        final pendingCount = paymentProvider.getPendingCount(_project);
+
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: PaymentSummaryCard(
+                totalAmount: totalAmount,
+                paidAmount: paidAmount,
+                pendingAmount: pendingAmount,
+                paidCount: paidCount,
+                pendingCount: pendingCount,
+                totalMilestones: _project.milestones.length,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Payment History',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.filter_list,
+                            size: 16,
+                            color: AppTheme.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'All',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.all(20),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final milestonePayment = milestonePayments[index];
+                    final isLast = index == milestonePayments.length - 1;
+                    return MilestonePaymentItem(
+                      milestonePayment: milestonePayment,
+                      isLast: isLast,
+                    );
+                  },
+                  childCount: milestonePayments.length,
                 ),
               ),
             ),
