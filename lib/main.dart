@@ -7,7 +7,6 @@ import 'providers/project_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/payment_provider.dart';
 import 'services/data_service.dart';
-import 'screens/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,15 +24,16 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) {
           final paymentProvider = PaymentProvider();
-          paymentProvider.initializeMockPayments(DataService.getMockProjects());
+          final projects = DataService.getMockProjects();
+          paymentProvider.initializeMockPayments(projects);
           return paymentProvider;
         }),
       ],
       child: MaterialApp(
-        title: 'Project Tracker',
+        title: 'Client Portal',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const SplashScreen(),
+        initialRoute: AppRoutes.splash,
         onGenerateRoute: AppRoutes.generateRoute,
       ),
     );
